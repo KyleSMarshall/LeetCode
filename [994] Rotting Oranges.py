@@ -13,7 +13,7 @@ impossible, return -1 instead.
 '''
 
 
-# Solution: (Still in progress)
+# Solution: (Faster than 90.44% of python3 solutions)
 
 class Solution:
     def orangesRotting(self, grid: List[List[int]]) -> int:
@@ -21,45 +21,73 @@ class Solution:
         # Make a list of oranges that are rotten to begin with
         # These will be our starting points
         
-        oranges = [[] for i in range(len(grid) * len(grid[0]))]
-        orange_set = set()
+        neighbors = [[] for i in range(len(grid) * len(grid[0]))]
+        fresh = set()
+        rotten = set()
+        
+        # Create a flat list of oranges
+        flat_list = [item for sublist in grid for item in sublist]
+        # Add the fresh and rotten indices to their appropriate set
+        for i in range(len(flat_list)):
+            if flat_list[i] == 1:
+                fresh.add(i)
+            elif flat_list[i] == 2:
+                rotten.add(i)
+        
+        # Stop right away if we have no fresh oranges
+        if len(fresh) == 0:
+            return 0
         
         # Make neighboring associations in loop
-        for i in range(len(grid)):
-            for k in range(len(grid)):
-                orange_place = i*len(grid) + k
-                if k != len(grid) -1:
+        h = len(grid)
+        l = len(grid[0])
+        for i in range(h):
+            for k in range(l):
+                # Index location of orange in flattened grid
+                orange_loc = i*l + k
+                # Conditionals to ensure we don't query invalid indices
+                if k != l-1:
                     if grid[i][k] != 0 and grid[i][k+1] != 0:
-                        orange_set.add(orange_place)
-                        orange_set.add(orange_place + 1)
-                        oranges[orange_place].append(orange_place + 1)
-                        oranges[orange_place + 1].append(orange_place)
-                if i != len(grid)-1:
+                        neighbors[orange_loc].append(orange_loc + 1)
+                        neighbors[orange_loc + 1].append(orange_loc)
+                        
+                if i != h-1:
                     if grid[i][k] != 0 and grid[i+1][k] != 0:
-                        orange_set.add(orange_place + len(grid))
-                        orange_set.add(orange_place)
-                        oranges[orange_place].append(orange_place+len(grid))
-                        oranges[orange_place + len(grid)].append(orange_place)
-        print(oranges)
-        print(orange_set)
+                        neighbors[orange_loc].append(orange_loc + l)
+                        neighbors[orange_loc + l].append(orange_loc)
+
         
         # Use depth-breadth-search algorithm
         def dbs(graph, start):
-            visited, queue = set(), [start]
+            
+            visited, queue = set(), start
             time = 0
+            
             while queue:
-                vertex = queue.pop(0)
-                if vertex not in visited:
-                    visited.add(vertex)
-                    queue.extend(graph[vertex])
+                new_queue = queue[:]
+                time_inc = False # Default to not increase time
                 
+                while new_queue:
+                    vertex = new_queue.pop(0)
+                    queue.remove(vertex)
+                    
+                    if vertex not in visited:
+                        visited.add(vertex)
+                        for v in graph[vertex]:
+                            if v not in visited and v not in queue:
+                                queue.extend([v])
+                                time_inc = True
+                                
+                if time_inc == True: 
+                    time += 1
+
             return (visited, time)
         
-        visited, time = dbs(oranges, 0)
-        if len(visited) == len(orange_set):
-            return time
-        else:
+        rotten_start = list(rotten)
+        visited, time = dbs(neighbors, rotten_start)
+        
+        # Return -1 if there are remaining fresh oranges
+        if len(visited) != len(fresh)+len(rotten):
             return -1
         
-                
-            
+        return time
