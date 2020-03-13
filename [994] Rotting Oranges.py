@@ -10,6 +10,10 @@ Every minute, any fresh orange that is adjacent (4-directionally) to a rotten or
 
 Return the minimum number of minutes that must elapse until no cell has a fresh orange.  If this is 
 impossible, return -1 instead.
+
+Example -
+Input: [[2,1,1],[1,1,0],[0,1,1]]
+Output: 4
 '''
 
 
